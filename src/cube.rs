@@ -296,6 +296,11 @@ impl Cube {
     }
 
     pub fn render(&mut self, view: &wgpu::TextureView, device: &wgpu::Device, queue: &wgpu::Queue) {
+        // Update uniform buffer to animate the cube
+        let uniforms = Self::uniforms(self.step, self.aspect_ratio);
+        queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
+        self.step += 1;
+
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Cube Encoder"),
         });
