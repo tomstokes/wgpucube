@@ -182,19 +182,25 @@ impl Cube {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        // Create uniform buffer
-        // TODO: These are placeholders. Make these matrices similar to kmscube values
-        let model_view = Mat4::from_rotation_y(1.23); // TODO: Dynamic rotation
-        let view = Mat4::look_at_rh(Vec3::new(0.0, 2.0, 5.0), Vec3::ZERO, Vec3::Y);
-        let projection = Mat4::perspective_rh(
-            45.0_f32.to_radians(),
-            1.0, // TODO: Use correct aspect ratio
-            0.1,
-            100.0,
-        );
-        let model_view_projection = projection * view * model_view;
+        // Calculate transformation matrices
+        //
+        // This attemps to replicate the behavior of kmscube's custom transformation code which
+        // keeps the vertical FOV fixed.
+        let i = 1.23_f32; // TODO: Dynamic stepping
+        let model_view = Mat4::from_translation(Vec3::new(0.0, 0.0, -8.0))
+            * Mat4::from_rotation_x((45.0 + 0.25 * i).to_radians())
+            * Mat4::from_rotation_y((45.0 - 0.5 * i).to_radians())
+            * Mat4::from_rotation_z((10.0 + 0.15 * i).to_radians());
+        let aspect_ratio = 1.0_f32; // TODO: Use correct aspect ratio (width/height)
+        let top = 2.8 * (1.0 / aspect_ratio);
+        let near = 6.0;
+        let far = 10.0;
+        let fov_y = 2.0 * (top / near).atan(); // Equivalent vertical FOV
+        let projection = Mat4::perspective_rh(fov_y, aspect_ratio, near, far);
+        let model_view_projection = projection * model_view;
         let normal = model_view.inverse().transpose();
 
+        // Create uniform buffer
         let uniforms = Uniforms {
             model_view: model_view.to_cols_array_2d(),
             model_view_projection: model_view_projection.to_cols_array_2d(),
