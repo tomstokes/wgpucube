@@ -114,6 +114,7 @@ impl ApplicationHandler for App {
         if let Some(state) = &mut self.state {
             match event {
                 WindowEvent::Resized(new_size) => {
+                    state.cube.resize(new_size, &state.queue);
                     state.resize(new_size)
                     // Winit will automatically provide a RedrawRequested event after this event
                 }

@@ -163,6 +163,7 @@ fn create_vertices<const N: usize>(
 pub(crate) struct Cube {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    uniform_buffer: wgpu::Buffer,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
 }
@@ -182,30 +183,10 @@ impl Cube {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        // Calculate transformation matrices
-        //
-        // This attemps to replicate the behavior of kmscube's custom transformation code which
-        // keeps the vertical FOV fixed.
-        let i = 1.23_f32; // TODO: Dynamic stepping
-        let model_view = Mat4::from_translation(Vec3::new(0.0, 0.0, -8.0))
-            * Mat4::from_rotation_x((45.0 + 0.25 * i).to_radians())
-            * Mat4::from_rotation_y((45.0 - 0.5 * i).to_radians())
-            * Mat4::from_rotation_z((10.0 + 0.15 * i).to_radians());
-        let aspect_ratio = 1.0_f32; // TODO: Use correct aspect ratio (width/height)
-        let top = 2.8 * (1.0 / aspect_ratio);
-        let near = 6.0;
-        let far = 10.0;
-        let fov_y = 2.0 * (top / near).atan(); // Equivalent vertical FOV
-        let projection = Mat4::perspective_rh(fov_y, aspect_ratio, near, far);
-        let model_view_projection = projection * model_view;
-        let normal = model_view.inverse().transpose();
-
         // Create uniform buffer
-        let uniforms = Uniforms {
-            model_view: model_view.to_cols_array_2d(),
-            model_view_projection: model_view_projection.to_cols_array_2d(),
-            normal: normal.to_cols_array_2d(),
-        };
+        let i = 1.23_f32; // TODO: Dynamic stepping
+        let aspect_ratio = 1.0_f32; // TODO: Use correct aspect ratio (width/height)
+        let uniforms = Self::uniforms(i, aspect_ratio);
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Uniform Buffer"),
             contents: bytemuck::cast_slice(&[uniforms]),
@@ -273,9 +254,42 @@ impl Cube {
         Self {
             vertex_buffer,
             index_buffer,
+            uniform_buffer,
             pipeline,
             bind_group,
         }
+    }
+
+    fn uniforms(step: f32, aspect_ratio: f32) -> Uniforms {
+        // Calculate transformation matrices
+        //
+        // This attemps to replicate the behavior of kmscube's custom transformation code which
+        // keeps the vertical FOV fixed.
+        let model_view = Mat4::from_translation(Vec3::new(0.0, 0.0, -8.0))
+            * Mat4::from_rotation_x((45.0 + 0.25 * step).to_radians())
+            * Mat4::from_rotation_y((45.0 - 0.5 * step).to_radians())
+            * Mat4::from_rotation_z((10.0 + 0.15 * step).to_radians());
+        let top = 2.8 * (1.0 / aspect_ratio);
+        let near = 6.0;
+        let far = 10.0;
+        let fov_y = 2.0 * (top / near).atan(); // Equivalent vertical FOV
+        let projection = Mat4::perspective_rh(fov_y, aspect_ratio, near, far);
+        let model_view_projection = projection * model_view;
+        let normal = model_view.inverse().transpose();
+
+        // Create uniform buffer
+        Uniforms {
+            model_view: model_view.to_cols_array_2d(),
+            model_view_projection: model_view_projection.to_cols_array_2d(),
+            normal: normal.to_cols_array_2d(),
+        }
+    }
+
+    pub fn resize(&self, new_size: winit::dpi::PhysicalSize<u32>, queue: &wgpu::Queue) {
+        let step = 1.0_f32; // TODO: Store step in state
+        let aspect_ratio = new_size.width as f32 / new_size.height as f32;
+        let uniforms = Self::uniforms(step, aspect_ratio);
+        queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
     }
 
     pub fn render(&self, view: &wgpu::TextureView, device: &wgpu::Device, queue: &wgpu::Queue) {
