@@ -166,6 +166,7 @@ pub(crate) struct Cube {
     uniform_buffer: wgpu::Buffer,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
+    step: u64,
 }
 
 impl Cube {
@@ -184,9 +185,9 @@ impl Cube {
         });
 
         // Create uniform buffer
-        let i = 1.23_f32; // TODO: Dynamic stepping
+        let step = 0;
         let aspect_ratio = 1.0_f32; // TODO: Use correct aspect ratio (width/height)
-        let uniforms = Self::uniforms(i, aspect_ratio);
+        let uniforms = Self::uniforms(step, aspect_ratio);
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Uniform Buffer"),
             contents: bytemuck::cast_slice(&[uniforms]),
@@ -257,18 +258,19 @@ impl Cube {
             uniform_buffer,
             pipeline,
             bind_group,
+            step,
         }
     }
 
-    fn uniforms(step: f32, aspect_ratio: f32) -> Uniforms {
+    fn uniforms(step: u64, aspect_ratio: f32) -> Uniforms {
         // Calculate transformation matrices
         //
         // This attemps to replicate the behavior of kmscube's custom transformation code which
         // keeps the vertical FOV fixed.
         let model_view = Mat4::from_translation(Vec3::new(0.0, 0.0, -8.0))
-            * Mat4::from_rotation_x((45.0 + 0.25 * step).to_radians())
-            * Mat4::from_rotation_y((45.0 - 0.5 * step).to_radians())
-            * Mat4::from_rotation_z((10.0 + 0.15 * step).to_radians());
+            * Mat4::from_rotation_x((45.0 + 0.25 * step as f32).to_radians())
+            * Mat4::from_rotation_y((45.0 - 0.5 * step as f32).to_radians())
+            * Mat4::from_rotation_z((10.0 + 0.15 * step as f32).to_radians());
         let top = 2.8 * (1.0 / aspect_ratio);
         let near = 6.0;
         let far = 10.0;
@@ -286,13 +288,12 @@ impl Cube {
     }
 
     pub fn resize(&self, new_size: winit::dpi::PhysicalSize<u32>, queue: &wgpu::Queue) {
-        let step = 1.0_f32; // TODO: Store step in state
         let aspect_ratio = new_size.width as f32 / new_size.height as f32;
-        let uniforms = Self::uniforms(step, aspect_ratio);
+        let uniforms = Self::uniforms(self.step, aspect_ratio);
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
     }
 
-    pub fn render(&self, view: &wgpu::TextureView, device: &wgpu::Device, queue: &wgpu::Queue) {
+    pub fn render(&mut self, view: &wgpu::TextureView, device: &wgpu::Device, queue: &wgpu::Queue) {
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Cube Encoder"),
         });
