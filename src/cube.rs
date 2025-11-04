@@ -166,6 +166,7 @@ pub(crate) struct Cube {
     uniform_buffer: wgpu::Buffer,
     pipeline: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
+    aspect_ratio: f32,
     step: u64,
 }
 
@@ -258,6 +259,7 @@ impl Cube {
             uniform_buffer,
             pipeline,
             bind_group,
+            aspect_ratio,
             step,
         }
     }
@@ -287,9 +289,9 @@ impl Cube {
         }
     }
 
-    pub fn resize(&self, new_size: winit::dpi::PhysicalSize<u32>, queue: &wgpu::Queue) {
-        let aspect_ratio = new_size.width as f32 / new_size.height as f32;
-        let uniforms = Self::uniforms(self.step, aspect_ratio);
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>, queue: &wgpu::Queue) {
+        self.aspect_ratio = new_size.width as f32 / new_size.height as f32;
+        let uniforms = Self::uniforms(self.step, self.aspect_ratio);
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
     }
 
