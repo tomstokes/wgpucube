@@ -2,6 +2,10 @@
 name = "wgpucube"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3"
+repository = "https://github.com/tomstokes/wgpucube"
+authors = ["Tom Stokes"]
+description = "WebGPU cross platform demo using Rust, winit, and wgpu"
 
 [dependencies]
 bytemuck = "1.24.0"
