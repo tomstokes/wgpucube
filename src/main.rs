@@ -98,7 +98,7 @@ impl App {
 
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window_attributes = Window::default_attributes().with_title("Omnicube");
+        let window_attributes = Window::default_attributes().with_title("wgpucube");
         let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
         let state = pollster::block_on(State::new(Arc::clone(&window)));
         self.state = Some(state);
