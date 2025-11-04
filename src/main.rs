@@ -1,3 +1,6 @@
+mod cube;
+
+use crate::cube::Cube;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
@@ -11,6 +14,7 @@ struct State {
     queue: wgpu::Queue,
     surface: wgpu::Surface<'static>,
     surface_format: wgpu::TextureFormat,
+    cube: Cube,
 }
 
 impl State {
@@ -30,6 +34,8 @@ impl State {
         let surface_capabilities = surface.get_capabilities(&adapter);
         let surface_format = surface_capabilities.formats[0];
 
+        let cube = Cube::new(surface_format, &device);
+
         let state = State {
             window,
             device,
@@ -37,6 +43,7 @@ impl State {
             size,
             surface,
             surface_format,
+            cube,
         };
         state.configure_surface();
 
@@ -72,31 +79,8 @@ impl State {
             .texture
             .create_view(&texture_view_descriptor);
 
-        let mut encoder = self.device.create_command_encoder(&Default::default());
+        self.cube.render(&texture_view, &self.device, &self.queue);
 
-        // Begin the renderpass
-        let renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &texture_view,
-                depth_slice: None,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::RED),
-                    store: wgpu::StoreOp::Store,
-                },
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        // Draw commands go here
-
-        // End the renderpass
-        drop(renderpass);
-
-        self.queue.submit([encoder.finish()]);
         self.window.pre_present_notify();
         surface_texture.present();
     }
