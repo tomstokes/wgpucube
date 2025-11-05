@@ -2,6 +2,7 @@ mod cube;
 
 use crate::cube::Cube;
 use std::sync::Arc;
+use tracing::info;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -133,6 +134,17 @@ impl ApplicationHandler for App {
 }
 
 fn main() {
+    cfg_if::cfg_if! {
+        if #[cfg(target_arch = "wasm32")] {
+            wasm_tracing::set_as_global_default();
+        } else {
+            let subscriber = tracing_subscriber::FmtSubscriber::new();
+            tracing::subscriber::set_global_default(subscriber).unwrap();
+        }
+    }
+
+    info!("Starting wgpucube");
+
     let event_loop = EventLoop::new();
     let mut app = App::new();
     event_loop.unwrap().run_app(&mut app).unwrap()
