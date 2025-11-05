@@ -1,15 +1,14 @@
-[package]
-name = "wgpucube"
+[workspace]
+resolver = "3"
+members = [
+    "wgpucube",
+    "xtask",
+]
+default-members = ["wgpucube"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "GPL-3"
 repository = "https://github.com/tomstokes/wgpucube"
 authors = ["Tom Stokes"]
-description = "WebGPU cross platform demo using Rust, winit, and wgpu"
-
-[dependencies]
-bytemuck = "1.24.0"
-glam = "0.30.9"
-pollster = "0.4.0"
-wgpu = "27.0.1"
-winit = "0.30.12"
