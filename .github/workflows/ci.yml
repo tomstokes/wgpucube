@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+env:
+  # Force colors in cargo output
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install --no-self-update --profile=minimal --component clippy
+          cargo -V
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Clippy
+        run: cargo clippy -- -D warnings
