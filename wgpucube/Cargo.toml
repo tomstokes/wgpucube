@@ -1,0 +1,15 @@
+[package]
+name = "wgpucube"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "WebGPU cross platform demo using Rust, winit, and wgpu"
+
+[dependencies]
+bytemuck = "1.24.0"
+glam = "0.30.9"
+pollster = "0.4.0"
+wgpu = "27.0.1"
+winit = "0.30.12"
