@@ -14,5 +14,9 @@ impl XtaskCommand for RunWasm {
         xshell::cmd!(shell, "wasm-bindgen target/wasm32-unknown-unknown/debug/wgpucube.wasm --target web --out-dir target/generated --out-name wgpucube")
             .run()
             .unwrap();
+        shell
+            .copy_file("./web/index.html", "./target/generated")
+            .unwrap();
+        xshell::cmd!(shell, "simple-http-server target/generated -c html,js,wasm --index --nocache --coep --coop --ip 127.0.0.1").run().unwrap();
     }
 }
