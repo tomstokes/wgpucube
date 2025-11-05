@@ -8,3 +8,4 @@ authors.workspace = true
 
 [dependencies]
 clap = "4.5.51"
+xshell = "0.2.7"
