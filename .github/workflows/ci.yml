@@ -10,7 +10,10 @@ env:
 jobs:
   lint:
     name: Linting
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
