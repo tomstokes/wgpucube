@@ -32,7 +32,7 @@ impl XtaskCommand for RunIos {
         .unwrap();
         xshell::cmd!(
             shell,
-            "xcrun simctl launch --console booted wgpucube.wgpucube"
+            "xcrun simctl launch --console booted com.github.tomstokes.wgpucube"
         )
         .run()
         .unwrap();

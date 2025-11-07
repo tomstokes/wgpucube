@@ -22,3 +22,15 @@ wasm-bindgen = "0.2.105"
 wasm-bindgen-futures = "0.4.55"
 wasm-tracing = "2.1.0"
 web-sys = { version = "0.3.82", default-features = false }
+
+[package.metadata.bundle.bin.wgpucube]
+name = "wgpucube"
+identifier = "com.github.tomstokes.wgpucube"
+# TODO: Create app icons
+# icon = ["path/to/icon*.png"]
+category = "Developer Tool"
+short_description = "wgpu and winit example app"
+long_description = """
+An example application written in Rust which uses winit and wgpu to render a
+simple 3D spinning cube with hardware accelerated graphics.
+"""
