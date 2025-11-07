@@ -18,9 +18,31 @@ wgpucube does not currently take any command line arguments. To run in release m
 cargo run --release
 ```
 
+### iOS
+
+The app can be built and run in the iOS simulator using cargo-bundle. This only works on macOS devices. XCode must be installed.
+
+The Rust aarch64 iOS simulator target must be installed to compile for the iOS simulator:
+
+```shell
+rustup target add aarch64-apple-ios-sim
+```
+
+cargo-bundle must be installed to create the iOS app bundle:
+
+```shell
+cargo install cargo-bundle
+``` 
+
+The following command will build the app for the iOS simulator, boot an iOS simulator, launch the Simulator app to bring it to the foreground, install the app into the simulated iPhone, and launch it:
+
+```shell
+cargo xtask run-ios
+```
+
 ### Other Platforms
 
-Support for web browsers and mobile devices is on the roadmap.
+Support for additional platforms such as Android is planned, but not implemented yet.
 
 ## Platform-Specific Quirks and Workarounds
 
