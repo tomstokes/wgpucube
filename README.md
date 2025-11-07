@@ -21,3 +21,14 @@ cargo run --release
 ### Other Platforms
 
 Support for web browsers and mobile devices is on the roadmap.
+
+## Platform-Specific Quirks and Workarounds
+
+### iOS
+
+#### Broken `request_redraw()` during `WindowEvent::RedrawRequested`
+Calling `window.request_redraw()` while handling a `WindowEvent::RedrawRequested` event does not work on iOS in winit v0.30. This breaks the common method of calling `request_redraw()` after handling each `WindowEvent::RedrawRequested` event for continuous rendering. Setting the event loop to `ControlFlow::Poll` is not a workaround because `WindowEvent::RedrawRequested` will not be sent on each event loop wakeup.
+
+The workaround used in this project adds a `request_redraw` boolean flag to the Application structure that is set to `true` after each `WindowEvent::RedrawRequested` event is handled. Then the `about_to_wait` handler checks this flag and calls `window.request_redraw()` if it is set. Calling `window.request_redraw()` from `about_to_wait()` appears to work.
+
+Winit tracking issue: https://github.com/rust-windowing/winit/issues/3406

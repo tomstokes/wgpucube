@@ -124,6 +124,8 @@ struct App {
     #[cfg_attr(not(target_arch = "wasm32"), allow(unused))]
     event_loop_proxy: EventLoopProxy<WgpuEvent>,
     state: State,
+    #[cfg(target_os = "ios")]
+    request_redraw: bool,
 }
 
 impl App {
@@ -131,6 +133,8 @@ impl App {
         Self {
             event_loop_proxy,
             state: State::Uninitialized,
+            #[cfg(target_os = "ios")]
+            request_redraw: false,
         }
     }
 }
@@ -232,10 +236,31 @@ impl ApplicationHandler<WgpuEvent> for App {
                         // TODO: Is this correct order for pre_present_notify and render?
                         window.pre_present_notify();
                         context.render();
-                        window.request_redraw();
+                        // Calling window.request_redraw() during a WindowEvent::RedrawRequested
+                        // does not work properly on iOS. As a workaround, the request_redraw flag
+                        // is set. The about_to_wait() method checks this flag and calls
+                        // window.request_redraw(), which appears to work.
+                        //
+                        // Issue: https://github.com/rust-windowing/winit/issues/3406
+                        cfg_if::cfg_if! {
+                            if #[cfg(target_os = "ios")] {
+                                self.request_redraw = true;
+                            } else {
+                                window.request_redraw();
+                            }
+                        }
                     }
                     _ => {}
                 }
+            }
+        }
+    }
+
+    #[cfg(target_os = "ios")]
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        if let State::Resumed { window, .. } = &self.state {
+            if std::mem::take(&mut self.request_redraw) {
+                window.request_redraw();
             }
         }
     }
