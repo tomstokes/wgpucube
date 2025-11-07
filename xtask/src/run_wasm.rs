@@ -17,6 +17,6 @@ impl XtaskCommand for RunWasm {
         shell
             .copy_file("./web/index.html", "./target/generated")
             .unwrap();
-        xshell::cmd!(shell, "simple-http-server target/generated -c html,js,wasm --index --nocache --coep --coop --ip 127.0.0.1").run().unwrap();
+        xshell::cmd!(shell, "simple-http-server target/generated -c html,js,wasm --index --nocache --coep --coop --ip 127.0.0.1 --port 8000").run().unwrap();
     }
 }

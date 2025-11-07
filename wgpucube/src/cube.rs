@@ -160,6 +160,7 @@ fn create_vertices<const N: usize>(
         .collect()
 }
 
+#[derive(Debug)]
 pub(crate) struct Cube {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
