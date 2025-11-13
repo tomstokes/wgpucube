@@ -1,7 +1,13 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+
+# Cancel old in-progress jobs for the same github.ref on any new activity
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # Force colors in cargo output
