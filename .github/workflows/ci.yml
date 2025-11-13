@@ -21,23 +21,23 @@ jobs:
       matrix:
         include:
           - name: Linux x86_64
-            os: ubuntu-latest
+            os: ubuntu-slim
             target: x86_64-unknown-linux-gnu
             clippy_targets: --bins
           - name: MacOS aarch64
-            os: ubuntu-latest
+            os: ubuntu-slim
             target: aarch64-apple-darwin
             clippy_targets: --bins
           - name: Windows x86_64
-            os: ubuntu-latest
+            os: ubuntu-slim
             target: x86_64-pc-windows-msvc
             clippy_targets: --bins
           - name: WebAssembly
-            os: ubuntu-latest
+            os: ubuntu-slim
             target: wasm32-unknown-unknown
             clippy_targets: --bins
           - name: Android aarch64
-            os: ubuntu-latest
+            os: ubuntu-slim
             target: aarch64-linux-android
             clippy_targets: --lib --bin xtask
           - name: iOS aarch64
@@ -45,7 +45,7 @@ jobs:
             #       even with iOS targets. More advanced apps that rely on iOS
             #       SDKs may require a macOS runner. However, using the
             #       ubuntu runners is 10X cheaper in terms of GitHub CI minutes.
-            os: ubuntu-latest
+            os: ubuntu-slim
             # NOTE: aarch64-apple-ios-sim would be added as a separate target
             #       to cover iOS simulator builds in a complete CI pipeline,
             #       but differences are unlikely to occur in practice. It is
@@ -55,6 +55,14 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+
+      - name: Install Rustup
+        run: |
+          if ! command -v rustup &>/dev/null; then
+            curl --proto '=https' --tlsv1.2 --silent --show-error --fail --retry 5 --retry-connrefused --retry-max-time 10 --max-time 20 --location https://sh.rustup.rs | sh -s -- -y
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+          $HOME/.cargo/bin/rustup --version
 
       - name: Install Rust toolchain
         run: |
