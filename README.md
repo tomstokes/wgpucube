@@ -31,7 +31,7 @@ rustup target add aarch64-apple-ios-sim
 cargo-bundle must be installed to create the iOS app bundle:
 
 ```shell
-cargo install cargo-bundle
+cargo install cargo-bundle --locked
 ``` 
 
 The following command will build the app for the iOS simulator, boot an iOS simulator, launch the Simulator app to bring it to the foreground, install the app into the simulated iPhone, and launch it:
@@ -39,6 +39,29 @@ The following command will build the app for the iOS simulator, boot an iOS simu
 ```shell
 cargo xtask run-ios
 ```
+
+### Android
+
+The quickest path to build for Android is with [cargo-apk](https://crates.io/crates/cargo-apk).
+
+```shell
+cargo install cargo-apk --locked
+```
+
+The Android SDK and NDK must be installed. Ensure that the `ANDROID_HOME` and `ANDROID_NDK_ROOT` environment variables are set to the correct paths.
+
+```shell
+export ANDROID_HOME=/path/to/android/sdk
+export ANDROID_NDK_ROOT=/path/to/android/ndk
+```
+
+Connect an Android device or start an Android simulator and run:
+
+```shell
+cargo apk run --lib --package wgpucube
+```
+
+Note that configuring the Android simulator to work correctly with GPU acceleration can be difficult, especially on macOS.
 
 ### Other Platforms
 

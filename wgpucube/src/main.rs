@@ -266,6 +266,7 @@ impl ApplicationHandler<WgpuEvent> for App {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 fn main() {
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
@@ -291,4 +292,27 @@ fn main() {
             event_loop.run_app(&mut app).unwrap();
         }
     }
+}
+
+// Android entry point
+// TODO: Refactor to move this to lib.rs to silence warning about using same file for lib and bin
+
+#[cfg(target_os = "android")]
+use winit::platform::android::activity::AndroidApp;
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+fn android_main(android_app: AndroidApp) {
+    use winit::platform::android::EventLoopBuilderExtAndroid;
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::Level::Trace.to_level_filter()),
+    );
+
+    let event_loop = EventLoop::<WgpuEvent>::with_user_event()
+        .with_android_app(android_app)
+        .build()
+        .unwrap();
+    let event_loop_proxy = event_loop.create_proxy();
+    let mut app = App::new(event_loop_proxy);
+    event_loop.run_app(&mut app).unwrap();
 }

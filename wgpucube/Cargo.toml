@@ -23,6 +23,16 @@ wasm-bindgen-futures = "0.4.55"
 wasm-tracing = "2.1.0"
 web-sys = { version = "0.3.82", default-features = false }
 
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.15.1"
+log = "0.4"
+winit = { version = "0.30.12", features = ["android-native-activity"] }
+
+[lib]
+name = "wgpucube"
+crate-type = ["cdylib"]
+path = "src/main.rs"
+
 [package.metadata.bundle.bin.wgpucube]
 name = "wgpucube"
 identifier = "com.github.tomstokes.wgpucube"
