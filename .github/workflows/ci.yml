@@ -34,6 +34,14 @@ jobs:
             os: ubuntu-latest
             target: aarch64-linux-android
             clippy_targets: --lib --bin xtask
+          - name: iOS aarch64
+            os: macos-latest
+            # NOTE: aarch64-applie-ios-sim would be added as a separate target
+            #       to cover iOS simulator builds in a complete CI pipeline,
+            #       but differences are unlikely to occur in practice. It is
+            #       omitted here to be kind to GitHub's free tier CI servers.
+            target: aarch64-apple-ios
+            clippy_targets: --bins
     steps:
       - name: Check out repository
         uses: actions/checkout@v5

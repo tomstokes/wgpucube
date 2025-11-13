@@ -259,6 +259,7 @@ impl ApplicationHandler<WgpuEvent> for App {
     #[cfg(target_os = "ios")]
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let State::Resumed { window, .. } = &self.state {
+            // See the comment above about request_redraw workaround on iOS
             if std::mem::take(&mut self.request_redraw) {
                 window.request_redraw();
             }
