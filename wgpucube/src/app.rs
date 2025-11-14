@@ -91,8 +91,18 @@ impl Context {
             .texture
             .create_view(&texture_view_descriptor);
 
-        self.cube.render(&texture_view, &self.device, &self.queue);
+        // Shared encoder for all draw calls
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
+        // Draw cube and update cube uniform buffers
+        self.cube.render(&texture_view, &self.queue, &mut encoder);
+
+        // Additional draw calls can be added here, such as for a UI layer
+
+        // Submit all draw calls
+        self.queue.submit(Some(encoder.finish()));
         surface_texture.present();
     }
 }

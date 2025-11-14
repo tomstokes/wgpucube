@@ -296,51 +296,51 @@ impl Cube {
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
     }
 
-    pub fn render(&mut self, view: &wgpu::TextureView, device: &wgpu::Device, queue: &wgpu::Queue) {
+    pub fn render(
+        &mut self,
+        view: &wgpu::TextureView,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+    ) {
         // Update uniform buffer to animate the cube
         let uniforms = Self::uniforms(self.step, self.aspect_ratio);
         queue.write_buffer(&self.uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
         self.step += 1;
 
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Cube Encoder"),
-        });
-        {
-            // The render pass returned by `begin_render_pass` has a lifetime relationship with the
-            // `encoder` to ensure that the `CommandEncoder` cannot be mutated while the
-            // `RenderPass` is being used to record commands.
-            //
-            // As a result, the `render_pass` must be dropped before the `encoder` can be submitted
-            // to the queue. The `render_pass` is placed in a nested scope in this example to allow
-            // it to be dropped before submission to the queue. Alternatively, an explicit
-            // `drop(render_pass)` call could be used for the same result.
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Cube Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view,
-                    depth_slice: None,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.5,
-                            g: 0.5,
-                            b: 0.5,
-                            a: 1.0,
-                        }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-            render_pass.set_pipeline(&self.pipeline);
-            render_pass.set_bind_group(0, &self.bind_group, &[]);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..36, 0, 0..1);
-        }
+        // While not necessary for this example, this is a good place to note that the render pass
+        // returned by `begin_render_pass` has a lifetime relationship with the `encoder`. This is
+        // designed to ensure the render pass will not be mutated after being submitted to the
+        // queue.
+        //
+        // In this example, the `render_pass` is dropped at the end of this function. If your code
+        // creates the render pass in the same scope as the `encoder` then you will need to drop the
+        // render pass before submitting the `encoder` to the queue. The easiest way to do this is
+        // by nesting the render pass creation and calls into their own scoped block.
 
-        queue.submit(Some(encoder.finish()));
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Cube Render Pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                depth_slice: None,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.5,
+                        g: 0.5,
+                        b: 0.5,
+                        a: 1.0,
+                    }),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        render_pass.set_pipeline(&self.pipeline);
+        render_pass.set_bind_group(0, &self.bind_group, &[]);
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.draw_indexed(0..36, 0, 0..1);
     }
 }
