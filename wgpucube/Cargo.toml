@@ -31,7 +31,6 @@ winit = { version = "0.30.12", features = ["android-native-activity"] }
 [lib]
 name = "wgpucube"
 crate-type = ["cdylib"]
-path = "src/main.rs"
 
 [package.metadata.bundle.bin.wgpucube]
 name = "wgpucube"
