@@ -2,6 +2,7 @@
 
 mod app;
 mod cube;
+mod egui;
 
 use app::{App, WgpuEvent};
 use winit::event_loop::EventLoop;

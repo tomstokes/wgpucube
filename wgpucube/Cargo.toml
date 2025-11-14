@@ -10,6 +10,10 @@ description = "WebGPU cross platform demo using Rust, winit, and wgpu"
 [dependencies]
 bytemuck = "1.24.0"
 cfg-if = "1.0.4"
+egui = "0.33.2"
+egui-wgpu = "0.33.2"
+# egui-winit includes the "clipboard" feature by default, which won't compile on wasm32
+egui-winit = { version = "0.33.2", default-features = false }
 glam = "0.30.9"
 pollster = "0.4.0"
 tracing = "0.1.41"
@@ -27,6 +31,9 @@ web-sys = { version = "0.3.82", default-features = false }
 android_logger = "0.15.1"
 log = "0.4"
 winit = { version = "0.30.12", features = ["android-native-activity"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+egui-winit = { version = "0.33.2", features = ["wayland", "x11"] }
 
 [lib]
 name = "wgpucube"

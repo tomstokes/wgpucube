@@ -1,4 +1,6 @@
 use crate::cube::Cube;
+
+use crate::egui::EguiInterface;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 use winit::application::ApplicationHandler;
@@ -14,6 +16,7 @@ pub(crate) struct Context {
     surface: wgpu::Surface<'static>,
     surface_format: wgpu::TextureFormat,
     cube: Cube,
+    egui: EguiInterface,
 }
 
 impl Context {
@@ -46,6 +49,7 @@ impl Context {
         let surface_format = surface_capabilities.formats[0];
 
         let cube = Cube::new(surface_format, &device);
+        let egui = EguiInterface::new(&device, &window, surface_format);
 
         let context = Self {
             device,
@@ -54,6 +58,7 @@ impl Context {
             surface,
             surface_format,
             cube,
+            egui,
         };
         context.configure_surface();
 
@@ -80,7 +85,7 @@ impl Context {
         self.configure_surface();
     }
 
-    fn render(&mut self) {
+    fn render(&mut self, window: &Arc<Window>) {
         let surface_texture = self.surface.get_current_texture().unwrap();
         let texture_view_descriptor = wgpu::TextureViewDescriptor {
             // TODO: Investigate sRGB surfaces ( surface_format.add_srgb_suffix() )
@@ -99,7 +104,14 @@ impl Context {
         // Draw cube and update cube uniform buffers
         self.cube.render(&texture_view, &self.queue, &mut encoder);
 
-        // Additional draw calls can be added here, such as for a UI layer
+        // Draw UI
+        self.egui.render(
+            window,
+            &texture_view,
+            &self.device,
+            &self.queue,
+            &mut encoder,
+        );
 
         // Submit all draw calls
         self.queue.submit(Some(encoder.finish()));
@@ -229,6 +241,10 @@ impl ApplicationHandler<WgpuEvent> for App {
                 warn!("Dropped event during initialization: {:?}", event);
             }
             State::Resumed { window, context } => {
+                // Let egui-winit handle events first
+                // TODO: Use EventResponse return info from egui-winit
+                context.egui.handle_input(window, &event);
+
                 match event {
                     WindowEvent::Resized(new_size) => {
                         // TODO: If cube stays in context then should context call cube.resize?
@@ -243,7 +259,7 @@ impl ApplicationHandler<WgpuEvent> for App {
                     WindowEvent::RedrawRequested => {
                         // TODO: Is this correct order for pre_present_notify and render?
                         window.pre_present_notify();
-                        context.render();
+                        context.render(window);
                         // Calling window.request_redraw() during a WindowEvent::RedrawRequested
                         // does not work properly on iOS. As a workaround, the request_redraw flag
                         // is set. The about_to_wait() method checks this flag and calls
