@@ -1,5 +1,6 @@
 use crate::cube::Cube;
 
+#[cfg(feature = "egui")]
 use crate::egui::EguiInterface;
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -16,6 +17,7 @@ pub(crate) struct Context {
     surface: wgpu::Surface<'static>,
     surface_format: wgpu::TextureFormat,
     cube: Cube,
+    #[cfg(feature = "egui")]
     egui: EguiInterface,
 }
 
@@ -49,6 +51,8 @@ impl Context {
         let surface_format = surface_capabilities.formats[0];
 
         let cube = Cube::new(surface_format, &device);
+
+        #[cfg(feature = "egui")]
         let egui = EguiInterface::new(&device, &window, surface_format);
 
         let context = Self {
@@ -58,6 +62,7 @@ impl Context {
             surface,
             surface_format,
             cube,
+            #[cfg(feature = "egui")]
             egui,
         };
         context.configure_surface();
@@ -85,6 +90,7 @@ impl Context {
         self.configure_surface();
     }
 
+    #[allow(unused_variables)]
     fn render(&mut self, window: &Arc<Window>) {
         let surface_texture = self.surface.get_current_texture().unwrap();
         let texture_view_descriptor = wgpu::TextureViewDescriptor {
@@ -105,6 +111,7 @@ impl Context {
         self.cube.render(&texture_view, &self.queue, &mut encoder);
 
         // Draw UI
+        #[cfg(feature = "egui")]
         self.egui.render(
             window,
             &texture_view,
@@ -243,6 +250,7 @@ impl ApplicationHandler<WgpuEvent> for App {
             State::Resumed { window, context } => {
                 // Let egui-winit handle events first
                 // TODO: Use EventResponse return info from egui-winit
+                #[cfg(feature = "egui")]
                 context.egui.handle_input(window, &event);
 
                 match event {

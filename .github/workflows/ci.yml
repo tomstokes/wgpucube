@@ -73,5 +73,8 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Clippy
+      - name: Clippy (default features)
         run: cargo clippy --target ${{ matrix.target }} --workspace ${{ matrix.clippy_targets }} -- -D warnings
+
+      - name: Clippy (egui feature)
+        run: cargo clippy --target ${{ matrix.target }} --features egui --workspace ${{ matrix.clippy_targets }} -- -D warnings

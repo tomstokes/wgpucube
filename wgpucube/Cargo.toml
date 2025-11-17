@@ -7,13 +7,17 @@ repository.workspace = true
 authors.workspace = true
 description = "WebGPU cross platform demo using Rust, winit, and wgpu"
 
+[features]
+default = []
+egui = ["dep:egui", "dep:egui-wgpu", "dep:egui-winit"]
+
 [dependencies]
 bytemuck = "1.24.0"
 cfg-if = "1.0.4"
-egui = "0.33.2"
-egui-wgpu = "0.33.2"
+egui = { version = "0.33.2", optional = true }
+egui-wgpu = { version = "0.33.2", optional = true }
 # egui-winit includes the "clipboard" feature by default, which won't compile on wasm32
-egui-winit = { version = "0.33.2", default-features = false }
+egui-winit = { version = "0.33.2", default-features = false, optional = true }
 glam = "0.30.9"
 pollster = "0.4.0"
 tracing = "0.1.41"

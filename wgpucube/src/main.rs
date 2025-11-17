@@ -2,6 +2,7 @@
 
 mod app;
 mod cube;
+#[cfg(feature = "egui")]
 mod egui;
 
 use app::{App, WgpuEvent};
