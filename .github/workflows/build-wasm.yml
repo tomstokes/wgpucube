@@ -1,0 +1,60 @@
+name: Build WASM
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # Force colors in cargo output
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-wasm:
+    name: Build WASM artifacts
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install Rustup
+        run: |
+          if ! command -v rustup &>/dev/null; then
+            curl --proto '=https' --tlsv1.2 --silent --show-error --fail --retry 5 --retry-connrefused --retry-max-time 10 --max-time 20 --location https://sh.rustup.rs | sh -s -- -y --default-toolchain none
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+          $HOME/.cargo/bin/rustup --version
+
+      - name: Install Rust toolchain with wasm32-unknown-unknown target
+        run: |
+          rustup toolchain install \
+            --target wasm32-unknown-unknown \
+            --no-self-update \
+            --profile=minimal \
+            stable
+          rustup default stable
+          cargo -V
+
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+
+      - name: Build WASM (release)
+        run: cargo build \
+          --release \
+          --target wasm32-unknown-unknown \
+          --bin wgpucube
+
+      - name: Generate web bindings
+        run: |
+          wasm-bindgen target/wasm32-unknown-unknown/release/wgpucube.wasm \
+            --no-typescript \
+            --target web \
+            --out-dir target/generated \
+            --out-name wgpucube
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-build
+          path: target/generated/
+          retention-days: 30
