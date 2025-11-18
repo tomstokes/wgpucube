@@ -59,15 +59,15 @@ jobs:
       - name: Install Rustup
         run: |
           if ! command -v rustup &>/dev/null; then
-            curl --proto '=https' --tlsv1.2 --silent --show-error --fail --retry 5 --retry-connrefused --retry-max-time 10 --max-time 20 --location https://sh.rustup.rs | sh -s -- -y
+            curl --proto '=https' --tlsv1.2 --silent --show-error --fail --retry 5 --retry-connrefused --retry-max-time 10 --max-time 20 --location https://sh.rustup.rs | sh -s -- -y --default-toolchain none
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           fi
           $HOME/.cargo/bin/rustup --version
 
       - name: Install Rust toolchain
         run: |
-          rustup toolchain install --no-self-update --profile=minimal --component clippy
-          rustup target add ${{ matrix.target }}
+          rustup toolchain install --target ${{ matrix.target }} --no-self-update --profile=minimal --component clippy,rustfmt stable
+          rustup default stable
           cargo -V
 
       - name: Check formatting
