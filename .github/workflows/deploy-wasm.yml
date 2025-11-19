@@ -1,4 +1,4 @@
-name: Build WASM
+name: Deploy WASM to GitHub Pages Repository
 
 on:
   push:
@@ -68,3 +68,20 @@ jobs:
           name: wasm-build
           path: target/generated/
           retention-days: 30
+
+      - name: Clone GitHub Pages repository
+        run: |
+          git clone https://x-access-token:${{ secrets.WGPUCUBE_GITHUB_IO_CONTENTS_WRITE }}@github.com/wgpucube/wgpucube.github.io.git wgpucube.github.io
+
+      - name: Copy WASM artifacts to GitHub Pages repository
+        run: |
+          cp -v target/generated/* wgpucube.github.io/public/
+
+      - name: Commit and push to GitHub Pages repository
+        run: |
+          cd wgpucube.github.io
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/
+          git commit -m "Update WASM build from ${{ github.repository }}@${{ github.sha }}" || exit 0
+          git push
