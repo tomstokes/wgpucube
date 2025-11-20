@@ -23,7 +23,7 @@ fn main() {
 
     let event_loop = EventLoop::<WgpuEvent>::with_user_event().build().unwrap();
     let event_loop_proxy = event_loop.create_proxy();
-    #[cfg_attr(target_arch = "wasm32", allow(unused))]
+    #[cfg_attr(target_arch = "wasm32", expect(unused_mut))]
     let mut app = App::new(event_loop_proxy);
 
     cfg_if::cfg_if! {

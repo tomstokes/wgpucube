@@ -93,7 +93,7 @@ impl Context {
         self.configure_surface();
     }
 
-    #[allow(unused_variables)]
+    #[cfg_attr(not(feature = "egui"), expect(unused_variables))]
     fn render(&mut self, window: &Arc<Window>) {
         let surface_texture = self.surface.get_current_texture().unwrap();
         let texture_view_descriptor = wgpu::TextureViewDescriptor {
@@ -143,7 +143,7 @@ enum State {
 
 #[derive(Debug)]
 pub(crate) enum WgpuEvent {
-    #[cfg_attr(not(target_arch = "wasm32"), allow(unused))]
+    #[cfg_attr(not(target_arch = "wasm32"), expect(unused))]
     Initialized {
         window: Arc<Window>,
         context: Context,
@@ -151,7 +151,7 @@ pub(crate) enum WgpuEvent {
 }
 
 pub(crate) struct App {
-    #[cfg_attr(not(target_arch = "wasm32"), allow(unused))]
+    #[cfg_attr(not(target_arch = "wasm32"), expect(unused))]
     event_loop_proxy: EventLoopProxy<WgpuEvent>,
     state: State,
     #[cfg(target_os = "ios")]
