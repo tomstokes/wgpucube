@@ -3,7 +3,8 @@ use crate::cube::Cube;
 #[cfg(feature = "egui")]
 use crate::egui::EguiInterface;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+#[cfg_attr(not(target_arch = "wasm32"), expect(unused_imports))]
+use tracing::{debug, error, info, warn};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
@@ -46,10 +47,12 @@ impl Context {
 
         // Note: window.inner_size() is only valid after instance.request_adapter() on web
         let size = window.inner_size();
+        debug!("Window size: {:?}", size);
 
         let surface_capabilities = surface.get_capabilities(&adapter);
         let surface_format = surface_capabilities.formats[0];
 
+        // TODO: Send size to Cube::new to set initial aspect ratio properly
         let cube = Cube::new(surface_format, &device);
 
         #[cfg(feature = "egui")]
@@ -153,6 +156,8 @@ pub(crate) struct App {
     state: State,
     #[cfg(target_os = "ios")]
     request_redraw: bool,
+    #[cfg(target_arch = "wasm32")]
+    pending_resize: Option<winit::dpi::PhysicalSize<u32>>,
 }
 
 impl App {
@@ -162,15 +167,17 @@ impl App {
             state: State::Uninitialized,
             #[cfg(target_os = "ios")]
             request_redraw: false,
+            #[cfg(target_arch = "wasm32")]
+            pending_resize: None,
         }
     }
 }
 
 impl ApplicationHandler<WgpuEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        // TODO: Be tolerante of multiple calls to .resumed()
+        // TODO: Be tolerant of multiple calls to .resumed()
         // Winit documentation states that .resumed() can be called multiple times on some
-        // platforms. This should be refactored to be tolerante of multiple calls. Currently only
+        // platforms. This should be refactored to be tolerant of multiple calls. Currently only
         // wasm platforms utilize State::Initializing so other platforms will only need to handle
         // the case where .resumed() is called when State::Resumed is already true. Need to
         // determine appropriate behavior in this case.
@@ -221,9 +228,20 @@ impl ApplicationHandler<WgpuEvent> for App {
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: WgpuEvent) {
         match event {
-            WgpuEvent::Initialized { context, window } => {
+            #[cfg_attr(not(target_arch = "wasm32"), expect(unused_mut))]
+            WgpuEvent::Initialized {
+                mut context,
+                window,
+            } => {
                 // TODO: Is it safe to assume state will be initializing?
                 assert!(matches!(self.state, State::Initializing));
+
+                #[cfg(target_arch = "wasm32")]
+                if let Some(new_size) = self.pending_resize.take() {
+                    context.cube.resize(new_size, &context.queue);
+                    context.resize(new_size);
+                }
+
                 self.state = State::Resumed {
                     context,
                     window: Arc::clone(&window),
@@ -244,8 +262,21 @@ impl ApplicationHandler<WgpuEvent> for App {
                 error!("Received WindowEvent in State::Uninitialized: {:?}", event);
             }
             State::Initializing => {
-                // TODO: Should these events be queued up and processed when initialization is done?
-                warn!("Dropped event during initialization: {:?}", event);
+                #[cfg(target_arch = "wasm32")]
+                match event {
+                    WindowEvent::Resized(new_size) => {
+                        // The wgpu initialization may not be complete when winit sends the resize
+                        // event. Store the most recent resize event so it can be used when wgpu
+                        // initialization is complete.
+                        self.pending_resize = Some(new_size);
+                    }
+                    WindowEvent::CloseRequested => {
+                        event_loop.exit();
+                    }
+                    _ => {
+                        warn!("Dropped event during initialization: {:?}", event);
+                    }
+                }
             }
             State::Resumed { window, context } => {
                 // Let egui-winit handle events first
