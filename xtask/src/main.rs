@@ -8,6 +8,8 @@ use std::path::Path;
 use xshell::Shell;
 
 pub trait XtaskCommand {
+    fn command() -> Command;
+
     // TODO: This should return an exit code
     fn run(shell: &Shell, matches: &ArgMatches);
 }
@@ -16,8 +18,8 @@ fn main() {
     let cmd = Command::new("xtask")
         .bin_name("xtask")
         .subcommand_required(true)
-        .subcommand(Command::new("run-wasm").about("Build and serve wasm version"))
-        .subcommand(Command::new("run-ios").about("Build iOS app and run in Simulator"));
+        .subcommand(RunIos::command())
+        .subcommand(RunWasm::command());
     let matches = cmd.get_matches();
     let shell = Shell::new().unwrap();
     let workspace_root_path = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();

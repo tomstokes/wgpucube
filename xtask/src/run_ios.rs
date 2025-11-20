@@ -1,10 +1,14 @@
 use crate::XtaskCommand;
-use clap::ArgMatches;
+use clap::{ArgMatches, Command};
 use xshell::Shell;
 
 pub(crate) struct RunIos {}
 
 impl XtaskCommand for RunIos {
+    fn command() -> Command {
+        Command::new("run-ios").about("Build iOS app and run in Simulator")
+    }
+
     fn run(shell: &Shell, _matches: &ArgMatches) {
         // TODO: Return exit codes on error
         // TODO: Support release and debug targets
