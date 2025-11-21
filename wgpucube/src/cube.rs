@@ -1,6 +1,7 @@
 use glam::{Mat4, Vec3};
 use wgpu::TextureFormat;
 use wgpu::util::DeviceExt;
+use winit::dpi::PhysicalSize;
 
 const CUBE_VERTICES: [[f32; 3]; 24] = [
     // Front
@@ -172,7 +173,11 @@ pub(crate) struct Cube {
 }
 
 impl Cube {
-    pub fn new(texture_format: TextureFormat, device: &wgpu::Device) -> Self {
+    pub fn new(
+        texture_format: TextureFormat,
+        device: &wgpu::Device,
+        size: &PhysicalSize<u32>,
+    ) -> Self {
         // Create vertex and index buffers
         let vertices = create_vertices(&CUBE_VERTICES, &CUBE_COLORS, &CUBE_NORMALS);
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -188,7 +193,7 @@ impl Cube {
 
         // Create uniform buffer
         let step = 0;
-        let aspect_ratio = 1.0_f32; // TODO: Use correct aspect ratio (width/height)
+        let aspect_ratio = size.width as f32 / size.height as f32;
         let uniforms = Self::uniforms(step, aspect_ratio);
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Uniform Buffer"),

@@ -53,7 +53,7 @@ impl Context {
         let surface_format = surface_capabilities.formats[0];
 
         // TODO: Send size to Cube::new to set initial aspect ratio properly
-        let cube = Cube::new(surface_format, &device);
+        let cube = Cube::new(surface_format, &device, &window.inner_size());
 
         #[cfg(feature = "egui")]
         let egui = EguiInterface::new(&device, &window, surface_format);
