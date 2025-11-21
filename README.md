@@ -10,6 +10,26 @@ The goal is to run on every platform that wgpu and winit support, though this is
 
 ## Getting Started
 
+### Web
+
+The wasm32-unknown-unknown target must be installed to compile for the web:
+
+```shell
+rustup target add wasm32-unknown-unknown
+```
+
+[Trunk](https://trunkrs.dev/) is used to bundle and serve the local web app demo with hot reloading. It is available through Homebrew, Nix, and some other package managers or it can be installed with cargo:  
+
+```shell
+cargo install --locked trunk
+```
+
+An xtask command is provided to build and serve the web demo with hot reloading. The default configuration in `trunk.toml` will serve the demo on localhost port 8080:
+
+```shell
+cargo xtask run-wasm
+```
+
 ### Desktop (Linux, Windows, macOS)
 
 wgpucube does not currently take any command line arguments. To run in release mode, clone the repository and use cargo to run the project:
@@ -62,10 +82,6 @@ cargo apk run --lib --package wgpucube
 ```
 
 Note that configuring the Android simulator to work correctly with GPU acceleration can be difficult, especially on macOS.
-
-### Other Platforms
-
-Support for additional platforms such as Android is planned, but not implemented yet.
 
 ## Platform-Specific Quirks and Workarounds
 

@@ -1,0 +1,15 @@
+# Trunk configuration
+# Refer to https://trunkrs.dev/configuration/ for complete list of options
+
+[build]
+target = "index.html"
+release = false
+dist = "dist"
+minify = "never"
+
+[watch]
+watch = ["../wgpucube"]
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8080
