@@ -2,6 +2,7 @@ use crate::cube::Cube;
 
 #[cfg(feature = "egui")]
 use crate::egui::EguiInterface;
+use crate::frame_counter::FrameCounter;
 use std::sync::Arc;
 #[cfg_attr(not(target_arch = "wasm32"), expect(unused_imports))]
 use tracing::{debug, error, info, warn};
@@ -154,6 +155,7 @@ pub(crate) struct App {
     #[cfg_attr(not(target_arch = "wasm32"), expect(unused))]
     event_loop_proxy: EventLoopProxy<WgpuEvent>,
     state: State,
+    frame_counter: FrameCounter,
     #[cfg(target_os = "ios")]
     request_redraw: bool,
     #[cfg(target_arch = "wasm32")]
@@ -165,6 +167,7 @@ impl App {
         Self {
             event_loop_proxy,
             state: State::Uninitialized,
+            frame_counter: FrameCounter::new(),
             #[cfg(target_os = "ios")]
             request_redraw: false,
             #[cfg(target_arch = "wasm32")]
@@ -299,6 +302,8 @@ impl ApplicationHandler<WgpuEvent> for App {
                         // TODO: Is this correct order for pre_present_notify and render?
                         window.pre_present_notify();
                         context.render(window);
+                        self.frame_counter.count_frame();
+
                         // Calling window.request_redraw() during a WindowEvent::RedrawRequested
                         // does not work properly on iOS. As a workaround, the request_redraw flag
                         // is set. The about_to_wait() method checks this flag and calls

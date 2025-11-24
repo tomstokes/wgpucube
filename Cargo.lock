@@ -2947,6 +2947,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-tracing",
  "web-sys",
+ "web-time",
  "wgpu",
  "winit",
 ]

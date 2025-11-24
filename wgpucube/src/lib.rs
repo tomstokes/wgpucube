@@ -4,6 +4,7 @@ mod app;
 mod cube;
 #[cfg(feature = "egui")]
 mod egui;
+mod frame_counter;
 
 use app::{App, WgpuEvent};
 use winit::event_loop::EventLoop;
