@@ -85,6 +85,11 @@ Note that configuring the Android simulator to work correctly with GPU accelerat
 
 ## Platform-Specific Quirks and Workarounds
 
+### Web
+
+#### std::Instant::now() panics on wasm32-unknown-unknown
+Calling `std::Instant::now()` on wasm32-unknown-unknown is not supported and will panic when called. The [web_time](https://crates.io/crates/web-time) crate is used as a drop-in replacement that works on browsers which support `Performance.now()`. For other platforms it acts as a zero overhead compile-time pass through to `std::time` functions.
+
 ### iOS
 
 #### Broken `request_redraw()` during `WindowEvent::RedrawRequested`
@@ -93,3 +98,8 @@ Calling `window.request_redraw()` while handling a `WindowEvent::RedrawRequested
 The workaround used in this project adds a `request_redraw` boolean flag to the Application structure that is set to `true` after each `WindowEvent::RedrawRequested` event is handled. Then the `about_to_wait` handler checks this flag and calls `window.request_redraw()` if it is set. Calling `window.request_redraw()` from `about_to_wait()` appears to work.
 
 Winit tracking issue: https://github.com/rust-windowing/winit/issues/3406
+
+### Android
+
+#### Compiling as a library for Android
+The current method of bundling for Android requires building as a library, not a binary. A separate lib.rs entrypoint exists to service the Android build. The [android_logger](https://crates.io/crates/android_logger) is used in the lib.rs entrypoint to set up Android logging facilities.
