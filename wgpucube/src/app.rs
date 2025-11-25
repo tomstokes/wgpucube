@@ -3,6 +3,7 @@ use crate::cube::Cube;
 #[cfg(feature = "egui")]
 use crate::egui::EguiInterface;
 use crate::frame_counter::FrameCounter;
+use anyhow::Result;
 use std::sync::Arc;
 #[cfg_attr(not(target_arch = "wasm32"), expect(unused_imports))]
 use tracing::{debug, error, info, warn};
@@ -24,7 +25,7 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    async fn new(window: Arc<Window>) -> Self {
+    async fn new(window: Arc<Window>) -> Result<Self> {
         let instance_descriptor = wgpu::InstanceDescriptor::default();
         let instance = wgpu::Instance::new(&instance_descriptor);
 
@@ -35,16 +36,13 @@ impl Context {
         //       is refactored so that instance creation occurs before winit calls .resume() then
         //       additional logic would be required to create the surface at the appropriate point
         //       for different platforms.
-        let surface = instance.create_surface(Arc::clone(&window)).unwrap();
+        let surface = instance.create_surface(Arc::clone(&window))?;
 
         let request_adapter_options = wgpu::RequestAdapterOptions::default();
-        let adapter = instance
-            .request_adapter(&request_adapter_options)
-            .await
-            .unwrap();
+        let adapter = instance.request_adapter(&request_adapter_options).await?;
         info!("Using adapter: {:?}", adapter.get_info().backend);
         let device_descriptor = wgpu::DeviceDescriptor::default();
-        let (device, queue) = adapter.request_device(&device_descriptor).await.unwrap();
+        let (device, queue) = adapter.request_device(&device_descriptor).await?;
 
         // Note: window.inner_size() is only valid after instance.request_adapter() on web
         let size = window.inner_size();
@@ -71,7 +69,7 @@ impl Context {
         };
         context.configure_surface();
 
-        context
+        Ok(context)
     }
 
     fn configure_surface(&self) {
@@ -220,11 +218,18 @@ impl ApplicationHandler<WgpuEvent> for App {
             if #[cfg(target_arch = "wasm32")] {
                 let event_loop_proxy = self.event_loop_proxy.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let context = Context::new(Arc::clone(&window)).await;
-                    event_loop_proxy.send_event(WgpuEvent::Initialized { window, context }).unwrap();
+                    match Context::new(Arc::clone(&window)).await {
+                        Ok(context) => event_loop_proxy
+                            .send_event(WgpuEvent::Initialized { window, context })
+                            .unwrap(),
+                        Err(err) => {
+                            error!("Failed to initialize context: {:?}", err);
+                            crate::util::show_error_overlay(err);
+                        },
+                    }
                 });
             } else {
-                let context = pollster::block_on(Context::new(Arc::clone(&window)));
+                let context = pollster::block_on(Context::new(Arc::clone(&window))).unwrap();
                 self.state = State::Resumed {
                     window: Arc::clone(&window),
                     context,

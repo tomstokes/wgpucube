@@ -5,6 +5,7 @@ mod cube;
 #[cfg(feature = "egui")]
 mod egui;
 mod frame_counter;
+mod util;
 
 use app::{App, WgpuEvent};
 use tracing::info;
