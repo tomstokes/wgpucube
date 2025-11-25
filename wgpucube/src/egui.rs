@@ -58,12 +58,16 @@ impl EguiInterface {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
+        frame_stats: &crate::frame_counter::FrameStatistics,
     ) {
         // Extract accumulated input from the window
         let input = self.state.take_egui_input(window);
 
         // Run the egui code for one frame
-        let full_output = self.state.egui_ctx().run(input, |_ui| self.draw_window());
+        let full_output = self
+            .state
+            .egui_ctx()
+            .run(input, |_ui| self.draw_window(frame_stats));
 
         // Handle any platform output from egui such as updating cursor or IME
         self.state
@@ -120,28 +124,25 @@ impl EguiInterface {
         }
     }
 
-    fn draw_window(&self) {
-        // TODO: Include something related to state
-        egui::Window::new("wgpucube")
-            .resizable([true, false])
-            .default_width(280.0)
-            .default_open(false)
+    fn draw_window(&self, frame_stats: &crate::frame_counter::FrameStatistics) {
+        egui::Window::new("Rendering Statistics")
+            .resizable(false)
+            .title_bar(false)
+            .collapsible(false)
             .show(self.state.egui_ctx(), |ui| {
                 let ui_builder = egui::UiBuilder::new();
                 ui.scope_builder(ui_builder, |ui| {
-                    egui::Grid::new("options")
+                    egui::Grid::new("stats_grid")
                         .num_columns(2)
-                        .spacing([40.0, 4.0])
+                        .spacing([20.0, 4.0])
                         .striped(true)
                         .show(ui, |ui| {
-                            ui.label("Label");
-                            ui.label("wgpucube options");
+                            ui.label("Frame Rate");
+                            ui.label(format!("{:.2} fps", frame_stats.frames_per_second));
                             ui.end_row();
 
-                            // TODO: Store the UI state so sliders can actually adjust
-                            let mut value = 3.3f32;
-                            ui.label("Slider");
-                            ui.add(egui::Slider::new(&mut value, 0.0..=360.0).suffix("°"));
+                            ui.label("Frame Time");
+                            ui.label(format!("{:.2} ms", frame_stats.average_frame_time_ms));
                             ui.end_row();
                         });
                 });

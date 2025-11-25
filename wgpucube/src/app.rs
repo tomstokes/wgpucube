@@ -95,7 +95,11 @@ impl Context {
     }
 
     #[cfg_attr(not(feature = "egui"), expect(unused_variables))]
-    fn render(&mut self, window: &Arc<Window>) {
+    fn render(
+        &mut self,
+        window: &Arc<Window>,
+        frame_stats: &crate::frame_counter::FrameStatistics,
+    ) {
         let surface_texture = self.surface.get_current_texture().unwrap();
         let texture_view_descriptor = wgpu::TextureViewDescriptor {
             // TODO: Investigate sRGB surfaces ( surface_format.add_srgb_suffix() )
@@ -122,6 +126,7 @@ impl Context {
             &self.device,
             &self.queue,
             &mut encoder,
+            frame_stats,
         );
 
         // Submit all draw calls
@@ -301,7 +306,8 @@ impl ApplicationHandler<WgpuEvent> for App {
                     WindowEvent::RedrawRequested => {
                         // TODO: Is this correct order for pre_present_notify and render?
                         window.pre_present_notify();
-                        context.render(window);
+                        let frame_stats = self.frame_counter.statistics();
+                        context.render(window, &frame_stats);
                         self.frame_counter.count_frame();
 
                         // Calling window.request_redraw() during a WindowEvent::RedrawRequested
